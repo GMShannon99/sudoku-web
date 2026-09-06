@@ -1,24 +1,32 @@
 {
-  "updated": "2026-09-05",
+  "updated": "2026-09-06",
   "countries": [
     {
       "country": "United States",
-      "count": 21
+      "count": 38
     },
     {
       "country": "Austria",
-      "count": 1
+      "count": 2
+    },
+    {
+      "country": "Sweden",
+      "count": 2
     },
     {
       "country": "Belarus",
       "count": 1
     },
     {
-      "country": "Russia",
+      "country": "Canada",
       "count": 1
     },
     {
-      "country": "Sweden",
+      "country": "Germany",
+      "count": 1
+    },
+    {
+      "country": "Russia",
       "count": 1
     },
     {
