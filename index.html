@@ -561,7 +561,16 @@
     }
     body > *:not(#printArea) { display: none !important; }
     #printArea { display: block !important; margin: 0; }
-    #printImage { display: block; width: 100%; height: auto; }
+    /* Constrained by height, not width: #printImage's canvas is rendered at
+       exactly the Letter aspect ratio (1275x1650, see PRINT_CANVAS_WIDTH/
+       HEIGHT in sudoku-ui.js), so scaling it to width: 100% of the @page's
+       7.9in-wide printable area also scales it to nearly the full 10.4in
+       printable height -- leaving no room for #printFooter below it, which
+       then spilled onto its own second page. Capping the height at 10in
+       instead reserves a guaranteed ~0.4in strip underneath for the footer,
+       while width: auto (from the same aspect ratio) still comfortably
+       clears the printable width, so the whole thing fits on one page. */
+    #printImage { display: block; height: 10in; width: auto; max-width: 100%; margin: 0 auto; }
     #printFooter {
       display: block;
       margin: 6px 0 0;
