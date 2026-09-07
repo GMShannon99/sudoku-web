@@ -544,9 +544,24 @@
   #printArea { display: none; }
   @media print {
     html, body { background: #ffffff !important; }
+    /* body's normal on-screen box (flex layout, min-height: 100vh, and its
+       40px/60px top/bottom padding) is otherwise untouched by print -- only
+       *children* of body get hidden below. vh units don't reliably resolve
+       to "one physical page" during print (often the screen viewport
+       instead), so left as-is that forced height plus padding becomes real,
+       paginated space around the one visible image: blank pages before
+       and/or after it. Collapsing body down to exactly its content
+       eliminates that surplus space entirely. */
+    body {
+      display: block !important;
+      min-height: 0 !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
     body > *:not(#printArea) { display: none !important; }
-    #printArea { display: block !important; }
-    #printImage { width: 100%; height: auto; }
+    #printArea { display: block !important; margin: 0; }
+    #printImage { display: block; width: 100%; height: auto; }
   }
   @page { margin: 0.3in; }
 </style>
