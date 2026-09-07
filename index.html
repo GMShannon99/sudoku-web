@@ -562,6 +562,14 @@
     body > *:not(#printArea) { display: none !important; }
     #printArea { display: block !important; margin: 0; }
     #printImage { display: block; width: 100%; height: auto; }
+    #printFooter {
+      display: block;
+      margin: 6px 0 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: #8a8a8a;
+      text-align: center;
+    }
   }
   @page { margin: 0.3in; }
 </style>
@@ -803,8 +811,17 @@
   <!-- Populated by printBtn's handler (see sudoku-ui.js) with the same
        canvas-generated JPG data URL downloadJpgBtn saves to a file, then
        revealed via @media print (see <style> above) so window.print() has
-       something to print. Invisible on-screen at all other times. -->
-  <div id="printArea"><img id="printImage" alt="Printable Sudoku puzzle"></div>
+       something to print. Invisible on-screen at all other times.
+       #printFooter is a plain, static line (not drawn onto the canvas, so
+       it never ends up in the downloaded JPG) -- an explicit site credit
+       for the printed page, rather than relying on the browser's own
+       automatic print header/footer (page title/URL in small grey text),
+       which isn't guaranteed to appear the same way -- or at all -- across
+       browsers, devices, or a user's print settings. -->
+  <div id="printArea">
+    <img id="printImage" alt="Printable Sudoku puzzle">
+    <p id="printFooter">https://gmshannon99.github.io/sudoku-web/</p>
+  </div>
 
   <!-- ================= PRINT PUZZLE: NO VALID SOLUTION POPUP ================= -->
   <!-- Shown by downloadJpgBtn's/printBtn's handlers (see sudoku-ui.js) instead
