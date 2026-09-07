@@ -1337,7 +1337,15 @@ async function showPuzzleStats() {
   const timeoutId = setTimeout(() => controller.abort(), STATS_FETCH_TIMEOUT_MS);
 
   try {
-    const response = await fetch(STATS_URL, { signal: controller.signal });
+    // cache: "no-store" bypasses the browser's ordinary HTTP cache --
+    // GoatCounter serves this endpoint with `Cache-Control: public` plus a
+    // multi-hour `Expires`, and without this option a plain fetch() is
+    // entitled to reuse a stale response for that whole window instead of
+    // getting a live count.
+    const response = await fetch(STATS_URL, {
+      signal: controller.signal,
+      cache: "no-store",
+    });
     if (!response.ok) throw new Error(`Unexpected response status: ${response.status}`);
 
     const data = await response.json();
