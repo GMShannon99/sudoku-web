@@ -79,7 +79,7 @@ Switching into the Special view (via **Special**) or back out of it (via **Retur
 
 ### Version display
 
-The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.6").
+The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.7").
 
 ## How to run it
 
@@ -103,6 +103,7 @@ npm test
 
 ## Version history
 
+- **v4.0.7** — Reworded the Write to File button's tooltip and the note beneath the solving-screen controls from "Each save creates a new file..." to `Each "Write to File" creates a new file...`, naming the actual button instead of the ambiguous word "save" (easy to misread as referring to the separate "Backup for Reset" button).
 - **v4.0.6** — Every button now has a raised, tactile 3D look instead of the previous flat style: a layered shadow (a solid edge plus a soft blurred drop shadow) for depth, a subtle top-to-bottom sheen suggesting a light source, and a visible pressed-in state (shadow collapses, the button shifts down slightly, and darkens) on click/tap. Applied uniformly across every button in the app — the main action buttons, the number-pad candidate buttons, and the Special view's own controls — via the same two shared box-shadow values, with no color/branding changes beyond what the new depth needed to read well.
 - **v4.0.5** — Fixed a bug where re-entering the Special view after a previous visit ended on the last box (with Next shattered away) left the Next button stuck hidden even back on the first box, where it should be visible again. Prior/Next now always reset to a clean, intact state at the start of every visit.
 - **v4.0.4** — The home screen now shows only its buttons on load (or whenever you return to it, e.g. via New/Clear) — no grid until "Manual Entry" reveals one. "Start Solving" only appears once at least 6 squares are filled in, disappearing again if you delete back below that count; the old "Must enter more squares before starting." popup is gone along with it, since there's no longer a way to click a button that isn't there. The entry screen's instructional text now reads "Type in Sudoku digits to create a Puzzle." and its title now reads "Enter Your Sudoku Puzzle."
