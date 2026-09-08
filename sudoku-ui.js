@@ -1580,6 +1580,16 @@ function goToSpecialScreen() {
   specialBoxIndex = 0;
   specialPriorHidden = null;
   specialNextHidden = null;
+  // A prior visit may have left Prior/Next mid-shatter or shattered away
+  // (e.g. Return was clicked while sitting on box 9, so Next never
+  // reassembled) -- updateSpecialNavButtons()'s own "not yet set up" branch
+  // below only forces a button hidden when it should be, never un-hides one
+  // that's stale from last time, so guarantee both start every visit intact
+  // and visible (same guarantee resetButtonShatter() gives solveBtnEl/
+  // statsBtnEl elsewhere) before recomputing which one (if any) box 1 of 9
+  // actually needs hidden.
+  resetButtonShatter(specialPriorBtnEl);
+  resetButtonShatter(specialNextBtnEl);
   // Builds the magnified box's DOM now, while specialScreen is still
   // display:none -- it's fully ready before the spiral-blur transition even
   // starts, let alone by the time it finishes (see spiralBlurTransition()).
