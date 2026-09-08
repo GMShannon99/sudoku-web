@@ -79,7 +79,7 @@ Switching into the Special view (via **Special**) or back out of it (via **Retur
 
 ### Version display
 
-The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.4").
+The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.5").
 
 ## How to run it
 
@@ -103,6 +103,7 @@ npm test
 
 ## Version history
 
+- **v4.0.5** — Fixed a bug where re-entering the Special view after a previous visit ended on the last box (with Next shattered away) left the Next button stuck hidden even back on the first box, where it should be visible again. Prior/Next now always reset to a clean, intact state at the start of every visit.
 - **v4.0.4** — The home screen now shows only its buttons on load (or whenever you return to it, e.g. via New/Clear) — no grid until "Manual Entry" reveals one. "Start Solving" only appears once at least 6 squares are filled in, disappearing again if you delete back below that count; the old "Must enter more squares before starting." popup is gone along with it, since there's no longer a way to click a button that isn't there. The entry screen's instructional text now reads "Type in Sudoku digits to create a Puzzle." and its title now reads "Enter Your Sudoku Puzzle."
 - **v4.0.3** — Replaced the Special/Return screen transition's shatter effect with a lighter-weight spiral-blur (the screen spins, shrinks, and blurs to nothing, no crash sound) — New/Clear keeps the original shatter. New/Clear's shatter now runs every time it's used (previously it was skipped when no guesses had been entered yet); in practice a puzzle is always showing whenever New/Clear is clickable, so this effectively means it always shatters now.
 - **v4.0.2** — Renamed the "Save" button to "Backup for Reset" (label only, same behavior) and moved it to sit immediately before Reset, since the two are a matched pair. New/Clear now shatters the whole solving screen apart first, the same effect the Special view's transitions use, but only when there's an actual user-entered guess on the board to discard — with nothing entered, it skips straight to the entry screen.
