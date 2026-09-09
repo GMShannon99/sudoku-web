@@ -65,7 +65,7 @@ A **Help** button (available on both screens) opens an in-app documentation moda
 
 ### Puzzle stats
 
-A **View Puzzle Stats** button sits in the Help modal's footer, next to Close. It shows a live hit count right there in the Help modal, fed by [CountAPI](https://countapi.mileshilliard.com/)'s free `/hit/` endpoint under the shared key `sudoku-gilshannon-live-total` — the exact same key Sudoku-App uses, so both sites contribute to and display one combined total rather than two separate counts. That endpoint increments on every call, so it's only ever requested once, at page load (mirroring where the old analytics tracking pixel used to silently record a visit); clicking the button just displays that one already-fetched result rather than triggering a new hit. If the page-load request fails, times out, or comes back an unexpected shape, the modal shows "Puzzle stats are currently unavailable." instead of breaking or failing silently.
+A **View Puzzle Stats** button sits in the Help modal's footer, next to Close. Clicking it briefly shows "Opening live stats…" right there in the Help modal, then opens this site's public [Umami](https://umami.is/) analytics dashboard in a new tab. That dashboard is a public Umami "share" link, not an authenticated API call — nothing is fetched or displayed inline, and no API key or other credential ever has to ship to the browser to show it.
 
 **Fun extra:** clicking "View Puzzle Stats" also shatters the button itself into a handful of jagged pieces that tumble off the bottom of the screen, with a synthesized glass-breaking crash (same Web Audio API approach as the app's existing invalid-entry beep, no audio files) — purely cosmetic, both the animation and its sound skipped automatically if the browser's reduced-motion setting is on, and the button always comes back intact the next time the Help modal opens.
 
@@ -79,7 +79,7 @@ Switching into the Special view (via **Special**) or back out of it (via **Retur
 
 ### Version display
 
-The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.7").
+The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.8").
 
 ## How to run it
 
@@ -103,6 +103,7 @@ npm test
 
 ## Version history
 
+- **v4.0.8** — Restored the "View Puzzle Stats" button in the Help modal (same shatter effect on click as before), now opening a public Umami dashboard in a new tab instead of fetching and displaying a count inline, replacing the removed CountAPI counter.
 - **v4.0.7** — Reworded the Write to File button's tooltip and the note beneath the solving-screen controls from "Each save creates a new file..." to `Each "Write to File" creates a new file...`, naming the actual button instead of the ambiguous word "save" (easy to misread as referring to the separate "Backup for Reset" button).
 - **v4.0.6** — Every button now has a raised, tactile 3D look instead of the previous flat style: a layered shadow (a solid edge plus a soft blurred drop shadow) for depth, a subtle top-to-bottom sheen suggesting a light source, and a visible pressed-in state (shadow collapses, the button shifts down slightly, and darkens) on click/tap. Applied uniformly across every button in the app — the main action buttons, the number-pad candidate buttons, and the Special view's own controls — via the same two shared box-shadow values, with no color/branding changes beyond what the new depth needed to read well.
 - **v4.0.5** — Fixed a bug where re-entering the Special view after a previous visit ended on the last box (with Next shattered away) left the Next button stuck hidden even back on the first box, where it should be visible again. Prior/Next now always reset to a clean, intact state at the start of every visit.
