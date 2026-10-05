@@ -79,7 +79,7 @@ Switching into the Special view (via **Special**) or back out of it (via **Retur
 
 ### Version display
 
-The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.8").
+The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.9").
 
 ## How to run it
 
@@ -103,6 +103,7 @@ npm test
 
 ## Version history
 
+- **v4.0.9** — The Print button now opens a small popup offering "Print with Help" (the existing printout, unchanged) or "Print without Help" (same printout minus the row/column help numbers and the small candidate numbers inside squares). Cancel, clicking the backdrop, or Escape closes it without printing. Nothing on screen or in the puzzle data changes either way.
 - **v4.0.8** — Restored the "View Puzzle Stats" button in the Help modal (same shatter effect on click as before), now opening a public Umami dashboard in a new tab instead of fetching and displaying a count inline, replacing the removed CountAPI counter.
 - **v4.0.7** — Reworded the Write to File button's tooltip and the note beneath the solving-screen controls from "Each save creates a new file..." to `Each "Write to File" creates a new file...`, naming the actual button instead of the ambiguous word "save" (easy to misread as referring to the separate "Backup for Reset" button).
 - **v4.0.6** — Every button now has a raised, tactile 3D look instead of the previous flat style: a layered shadow (a solid edge plus a soft blurred drop shadow) for depth, a subtle top-to-bottom sheen suggesting a light source, and a visible pressed-in state (shadow collapses, the button shifts down slightly, and darkens) on click/tap. Applied uniformly across every button in the app — the main action buttons, the number-pad candidate buttons, and the Special view's own controls — via the same two shared box-shadow values, with no color/branding changes beyond what the new depth needed to read well.

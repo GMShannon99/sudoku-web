@@ -1146,6 +1146,22 @@
     </div>
   </div>
 
+  <!-- ================= PRINT PUZZLE: OPTIONS POPUP ================= -->
+  <!-- Shown by printBtn's handler (see sudoku-ui.js); hidden in print by the
+       same body > *:not(#printArea) rule as every other overlay. -->
+  <div class="modal-overlay" id="printOptionsOverlay">
+    <div class="modal" role="dialog" aria-labelledby="printOptionsTitle">
+      <h2 id="printOptionsTitle">Print Options</h2>
+      <div class="modal-body">
+        <p>Include the help numbers (row, column and square candidates) on the printout?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="printWithHelpBtn">Print with Help</button>
+        <button id="printWithoutHelpBtn">Print without Help</button>
+        <button class="secondary" id="printOptionsCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
 
 <script src="sudoku-logic.js"></script>
 <script src="sudoku-ui.js"></script>

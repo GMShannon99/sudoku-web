@@ -23,7 +23,7 @@ const samplePuzzle = [
   [0,9,0,0,0,0,4,0,0],
 ];
 
-const APP_VERSION = "4.0.8";
+const APP_VERSION = "4.0.9";
 const HELP_LAST_UPDATED = "September 7, 2026";
 
 const ENTRY_HINT_TEXT = "Type in Sudoku digits to create a Puzzle.";
@@ -1107,7 +1107,7 @@ function getPrintableGridOrShowInvalid() {
 // on screen (see updateCandidateLabels()) in the same right/bottom
 // positions. Only ever called after the caller has confirmed grid has a
 // valid solution -- this function itself doesn't check.
-function renderPrintCanvas(grid) {
+function renderPrintCanvas(grid, withHelp = true) {
   const canvas = document.createElement("canvas");
   canvas.width = PRINT_CANVAS_WIDTH;
   canvas.height = PRINT_CANVAS_HEIGHT;
@@ -1202,7 +1202,7 @@ function renderPrintCanvas(grid) {
         ctx.fillStyle = PRINT_INK;
         ctx.font = `${isGiven ? "bold " : ""}44px monospace`;
         ctx.fillText(String(val), x + PRINT_CELL_SIZE / 2, y + PRINT_CELL_SIZE / 2);
-      } else {
+      } else if (withHelp) {
         const candidates = new Set(computeValidCandidates(r, c));
         const sub = PRINT_CELL_SIZE / 3;
         ctx.font = "18px monospace";
@@ -1220,6 +1220,10 @@ function renderPrintCanvas(grid) {
       }
     }
   }
+
+  // "Print without Help" stops here: no row labels, column labels, or
+  // candidate mini-grids -- only the header, grid, givens and entries.
+  if (!withHelp) return canvas.toDataURL("image/jpeg", PRINT_JPEG_QUALITY);
 
   // Row-missing labels, to the right of the grid -- same digits/format as
   // updateCandidateLabels() (space-joined, checkmark once complete).
@@ -1272,11 +1276,11 @@ function renderPrintCanvas(grid) {
 // entirely, which is why it's the more cross-browser-reliable technique --
 // iOS Safari's Share Sheet "Print" (AirPrint) is then just its ordinary
 // handling of a print-triggered document, no special-casing needed.
-document.getElementById("printBtn").addEventListener("click", () => {
+function printPuzzle(withHelp) {
   const grid = getPrintableGridOrShowInvalid();
   if (!grid) return;
 
-  const dataUrl = renderPrintCanvas(grid);
+  const dataUrl = renderPrintCanvas(grid, withHelp);
 
   // Setting .src to a value that's already loaded doesn't reliably re-fire
   // "load" in every browser (e.g. printing the same puzzle twice in a row
@@ -1292,6 +1296,44 @@ document.getElementById("printBtn").addEventListener("click", () => {
     window.print();
   };
   printImageEl.src = dataUrl;
+}
+
+// The Print button first asks whether to include the help numbers. The
+// print is a canvas image (not the live DOM), so "without help" simply
+// renders that image without the help numbers -- nothing on screen or in
+// the puzzle data is ever touched, so there is nothing to restore afterward.
+const printOptionsOverlayEl = document.getElementById("printOptionsOverlay");
+
+function showPrintOptionsPopup() {
+  printOptionsOverlayEl.classList.add("active");
+}
+
+function hidePrintOptionsPopup() {
+  printOptionsOverlayEl.classList.remove("active");
+}
+
+document.getElementById("printBtn").addEventListener("click", () => {
+  clearIterationCount();
+  const check = readGrid(solvingCells).map((row) => row.slice());
+  const { solved } = SudokuLogic.solve(check);
+  if (!(solved && isGridFullyValid(check))) {
+    showPrintInvalidPopup();
+    return;
+  }
+  showPrintOptionsPopup();
+});
+
+document.getElementById("printWithHelpBtn").addEventListener("click", () => {
+  hidePrintOptionsPopup();
+  printPuzzle(true);
+});
+document.getElementById("printWithoutHelpBtn").addEventListener("click", () => {
+  hidePrintOptionsPopup();
+  printPuzzle(false);
+});
+document.getElementById("printOptionsCancelBtn").addEventListener("click", hidePrintOptionsPopup);
+printOptionsOverlayEl.addEventListener("click", (event) => {
+  if (event.target === printOptionsOverlayEl) hidePrintOptionsPopup();
 });
 
 document.getElementById("printInvalidCloseBtn").addEventListener("click", hidePrintInvalidPopup);
@@ -1901,6 +1943,7 @@ document.addEventListener("keydown", (event) => {
     hideHelp();
     hideSpecialHelp();
     hidePrintInvalidPopup();
+    hidePrintOptionsPopup();
   }
 
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
