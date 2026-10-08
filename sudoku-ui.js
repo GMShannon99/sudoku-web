@@ -349,6 +349,11 @@ document.getElementById("createNewBtn").addEventListener("click", () => {
 });
 
 document.getElementById("generateBtn").addEventListener("click", async () => {
+  // LEARN MODE hook: the 4x4 Learn Mode puzzle replaces the normal flow.
+  if (window.LearnMode && LearnMode.isOn()) {
+    LearnMode.start();
+    return;
+  }
   // setEntryHint() below writes into #entryHint, which lives inside
   // #entryBoardFrame -- reveal it so "Generating puzzle..." is actually
   // visible even if this is clicked straight from the buttons-only home

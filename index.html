@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sudoku Solver</title>
+<link rel="stylesheet" href="learn-mode.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -846,6 +847,12 @@
             <label><input type="radio" name="difficulty" value="Hard"> Hard</label>
           </div>
           <button class="secondary" id="entryHelpBtn">Help</button>
+          <!-- LEARN MODE switch (see learn-mode-ui.js) -->
+          <label class="learn-toggle">
+            <input type="checkbox" id="learnModeToggle" role="switch">
+            <span class="learn-track"></span>
+            <span>Learn Mode</span>
+          </label>
         </div>
       </div>
     </div>
@@ -893,6 +900,21 @@
       <button class="secondary" id="specialNextBtn">Next</button>
       <button class="secondary" id="specialHelpBtn">Help</button>
       <button id="specialReturnBtn">Return</button>
+    </div>
+  </div>
+
+  <!-- LEARN MODE solving screen (4x4; see learn-mode-ui.js). -->
+  <div class="screen" id="learnScreen">
+    <div class="learn-board-frame">
+      <div class="learn-grid" id="learnGrid"></div>
+    </div>
+    <div class="controls">
+      <button class="secondary" id="learnResetBtn">Reset</button>
+      <button id="learnSolveBtn">Solve</button>
+      <button class="secondary" id="learnNewClearBtn">New/Clear</button>
+    </div>
+    <div class="messages">
+      <div class="status-line" id="learnStatusLine"></div>
     </div>
   </div>
 
@@ -1165,5 +1187,7 @@
 
 <script src="sudoku-logic.js"></script>
 <script src="sudoku-ui.js"></script>
+<script src="learn-mode-logic.js"></script>
+<script src="learn-mode-ui.js"></script>
 </body>
 </html>
