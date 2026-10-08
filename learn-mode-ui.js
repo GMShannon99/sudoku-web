@@ -1,6 +1,6 @@
 /*
  * LEARN MODE -- DOM/UI wiring. Loaded after sudoku-ui.js and reuses its
- * globals (beep, transitionScreens, shatterButton, resetButtonShatter,
+ * globals (ding, transitionScreens, shatterButton, resetButtonShatter,
  * prefersReducedMotion, paintNow, APP_VERSION). The only change to
  * existing code is the one-line hook in sudoku-ui.js's generateBtn
  * handler that calls LearnMode.start() when the switch is on. See
@@ -90,17 +90,20 @@ const LearnMode = (function () {
 
   // Same rule as the normal game's solving screen, but digits 1-4 only: a
   // digit outside 1-4, or already used in the row/column/2x2 box, is
-  // rejected with a beep.
+  // rejected with a ding.
   function onCellInput(row, col, input) {
     let v = input.value;
     if (v.length > 1) v = v[v.length - 1];
-    if (v && !/[1-4]/.test(v)) v = "";
+    if (v && !/[1-4]/.test(v)) {
+      ding();
+      v = "";
+    }
 
     if (v) {
       const grid = readGrid();
       grid[row][col] = 0;
       if (!LearnLogic.candidates(grid, row, col).includes(parseInt(v, 10))) {
-        beep();
+        ding();
         v = "";
       }
     }

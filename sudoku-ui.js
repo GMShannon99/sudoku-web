@@ -23,8 +23,8 @@ const samplePuzzle = [
   [0,9,0,0,0,0,4,0,0],
 ];
 
-const APP_VERSION = "4.0.9";
-const HELP_LAST_UPDATED = "September 7, 2026";
+const APP_VERSION = "5.0.0";
+const HELP_LAST_UPDATED = "October 8, 2026";
 
 const ENTRY_HINT_TEXT = "Type in Sudoku digits to create a Puzzle.";
 
@@ -97,24 +97,74 @@ let moveHistory = [];
 // would overwrite it with stale state.
 let redoStack = [];
 
-function beep() {
+// The one sound for every rejected entry: a short, soft bell "ding"
+// (two sine partials -- a fundamental plus an inharmonic overtone, the
+// classic small-bell recipe -- with an instant attack and a quick
+// exponential decay). Synthesized with the Web Audio API like
+// shatterSound() below, so no audio file is needed.
+//
+// One shared AudioContext is reused (browsers cap how many can exist, and
+// iOS/iPadOS Safari starts every context "suspended" until a user gesture
+// resumes it), unlocked by the first tap/click/keypress -- see
+// unlockAudio(). Rapid rejections are throttled so dings never stack into
+// a distorted buzz.
+const DING_MIN_GAP_SECONDS = 0.09;
+let audioCtx = null;
+let lastDingTime = -Infinity;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    audioCtx = new Ctor();
+  }
+  return audioCtx;
+}
+
+function unlockAudio() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 600;
-    osc.type = "sine";
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.15);
+    const ctx = getAudioCtx();
+    if (ctx && ctx.state === "suspended") ctx.resume();
+  } catch (e) {
+  }
+}
+
+["pointerdown", "touchend", "mousedown", "keydown"].forEach((type) => {
+  document.addEventListener(type, unlockAudio, { capture: true, passive: true });
+});
+
+function ding() {
+  try {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+
+    const now = ctx.currentTime;
+    if (now - lastDingTime < DING_MIN_GAP_SECONDS) return;
+    lastDingTime = now;
+
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.14, now + 0.005);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    master.connect(ctx.destination);
+
+    [[1318.5, 1], [3640, 0.25]].forEach(([freq, level]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.value = level;
+      osc.connect(gain).connect(master);
+      osc.start(now);
+      osc.stop(now + 0.65);
+    });
   } catch (e) {
   }
 }
 
 // Synthesized "glass breaking" crash, same no-dependencies/no-asset
-// approach as beep() above (Web Audio API only), just layering more than
+// approach as ding() above (Web Audio API only), just layering more than
 // one sound source so it reads as a crash rather than another single tone:
 // a short burst of filtered white noise for the low "crash," plus a
 // handful of brief, randomly pitched/timed high tones on top for the
@@ -291,12 +341,15 @@ function onEntryCellInput(row, col, input) {
 
   let v = input.value;
   if (v.length > 1) v = v[v.length - 1];
-  if (v && !/[1-9]/.test(v)) v = "";
+  if (v && !/[1-9]/.test(v)) {
+    ding();
+    v = "";
+  }
 
   if (v) {
     // Same row/column/box duplicate check the solving screen's
     // onSolvingCellInput uses -- a digit already used elsewhere among the
-    // OTHER clues typed so far is rejected with a beep, so a puzzle handed
+    // OTHER clues typed so far is rejected with a ding, so a puzzle handed
     // off to "Start Solving" can never start out broken.
     const digit = parseInt(v, 10);
     const grid = readGrid(entryCells);
@@ -309,7 +362,7 @@ function onEntryCellInput(row, col, input) {
     const boxOk = boxMissing[box].has(digit);
 
     if (!(rowOk && colOk && boxOk)) {
-      beep();
+      ding();
       v = "";
     }
   }
@@ -840,7 +893,10 @@ document.addEventListener("mousedown", (event) => {
 function onSolvingCellInput(row, col, input) {
   let v = input.value;
   if (v.length > 1) v = v[v.length - 1];
-  if (v && !/[1-9]/.test(v)) v = "";
+  if (v && !/[1-9]/.test(v)) {
+    ding();
+    v = "";
+  }
 
   if (v) {
     const digit = parseInt(v, 10);
@@ -854,7 +910,7 @@ function onSolvingCellInput(row, col, input) {
     const boxOk = boxMissing[box].has(digit);
 
     if (!(rowOk && colOk && boxOk)) {
-      beep();
+      ding();
       v = "";
     }
   }

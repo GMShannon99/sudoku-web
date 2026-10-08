@@ -21,7 +21,7 @@ Returning to this screen later — e.g. via **New/Clear** — resets it back to 
 
 ### Input validation everywhere
 
-Both the entry screen and the solving screen enforce the same rule as you type: only digits 1–9 are accepted, and a digit already used elsewhere in that cell's row, column, or 3×3 box is rejected outright, accompanied by an audible beep.
+Both the entry screen and the solving screen enforce the same rule as you type: only digits 1–9 are accepted, and a digit already used elsewhere in that cell's row, column, or 3×3 box is rejected outright, accompanied by a soft bell "ding"; typing a non-digit (letters, symbols, 0) dings too.
 
 ### Click-to-see candidates
 
@@ -67,7 +67,7 @@ A **Help** button (available on both screens) opens an in-app documentation moda
 
 A **View Puzzle Stats** button sits in the Help modal's footer, next to Close. Clicking it briefly shows "Opening live stats…" right there in the Help modal, then opens this site's public [Umami](https://umami.is/) analytics dashboard in a new tab. That dashboard is a public Umami "share" link, not an authenticated API call — nothing is fetched or displayed inline, and no API key or other credential ever has to ship to the browser to show it.
 
-**Fun extra:** clicking "View Puzzle Stats" also shatters the button itself into a handful of jagged pieces that tumble off the bottom of the screen, with a synthesized glass-breaking crash (same Web Audio API approach as the app's existing invalid-entry beep, no audio files) — purely cosmetic, both the animation and its sound skipped automatically if the browser's reduced-motion setting is on, and the button always comes back intact the next time the Help modal opens.
+**Fun extra:** clicking "View Puzzle Stats" also shatters the button itself into a handful of jagged pieces that tumble off the bottom of the screen, with a synthesized glass-breaking crash (same Web Audio API approach as the app's existing invalid-entry ding, no audio files) — purely cosmetic, both the animation and its sound skipped automatically if the browser's reduced-motion setting is on, and the button always comes back intact the next time the Help modal opens.
 
 ### Special view
 
@@ -79,7 +79,7 @@ Switching into the Special view (via **Special**) or back out of it (via **Retur
 
 ### Version display
 
-The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v4.0.9").
+The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v5.0.0").
 
 ## How to run it
 
@@ -98,11 +98,12 @@ npm test
 
 - **`index.html`** — the page markup and all styling (a single embedded `<style>` block), including all three screens (entry, solving, and the Special view), the candidate buttons (placed into the solving grid's bottom-right corner cell by `sudoku-ui.js`), the "Iteration: N" corner panel, and both Help modals (main and Special-view).
 - **`sudoku-logic.js`** — pure puzzle-solving logic with no DOM dependencies: tracking sets for rows/columns/boxes, naked-singles propagation, MRV backtracking search, solution counting/uniqueness checks, difficulty rating, puzzle generation, and save-record parsing. Works equally under Node or in the browser.
-- **`sudoku-ui.js`** — all DOM wiring and interactivity: building the grid, handling input/validation/beeps, candidate selection, backups, the solve/reset/write-to-file buttons, and the Help modal. Relies entirely on `sudoku-logic.js` for the actual solving rules.
+- **`sudoku-ui.js`** — all DOM wiring and interactivity: building the grid, handling input/validation/dings, candidate selection, backups, the solve/reset/write-to-file buttons, and the Help modal. Relies entirely on `sudoku-logic.js` for the actual solving rules.
 - **`tests/`** — the undo/redo test suite described above.
 
 ## Version history
 
+- **v5.0.0** — Invalid entries now play a short, soft synthesized bell "ding" (Web Audio, no audio files) instead of the old beep. It also plays for non-digit keys (letters, symbols, 0), which were previously rejected silently, and in Learn Mode for anything other than 1–4. The audio is unlocked on the first tap/keypress so it works on iPhone/iPad Safari, and rapid invalid keys are throttled so dings never pile up. Rejection rules are unchanged.
 - **v4.0.9** — The Print button now opens a small popup offering "Print with Help" (the existing printout, unchanged) or "Print without Help" (same printout minus the row/column help numbers and the small candidate numbers inside squares). Cancel, clicking the backdrop, or Escape closes it without printing. Nothing on screen or in the puzzle data changes either way.
 - **v4.0.8** — Restored the "View Puzzle Stats" button in the Help modal (same shatter effect on click as before), now opening a public Umami dashboard in a new tab instead of fetching and displaying a count inline, replacing the removed CountAPI counter.
 - **v4.0.7** — Reworded the Write to File button's tooltip and the note beneath the solving-screen controls from "Each save creates a new file..." to `Each "Write to File" creates a new file...`, naming the actual button instead of the ambiguous word "save" (easy to misread as referring to the separate "Backup for Reset" button).
