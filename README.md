@@ -65,7 +65,7 @@ A **Help** button (available on both screens) opens an in-app documentation moda
 
 ### Puzzle stats
 
-A **View Puzzle Stats** button sits in the Help modal's footer, next to Close. Clicking it briefly shows "Opening live stats…" right there in the Help modal, then opens this site's public [Umami](https://umami.is/) analytics dashboard in a new tab. That dashboard is a public Umami "share" link, not an authenticated API call — nothing is fetched or displayed inline, and no API key or other credential ever has to ship to the browser to show it.
+A **View Puzzle Stats** button sits in the Help modal's footer, next to Close. Clicking it briefly shows "Opening live stats…" right there in the Help modal, then opens this site's public [Umami](https://umami.is/) analytics dashboard in a new tab (shared with Sudoku-App, so both sites' traffic shows up in one combined dashboard). That dashboard is a public Umami "share" link, not an authenticated API call — nothing is fetched or displayed inline, and no API key or other credential ever has to ship to the browser to show it.
 
 **Fun extra:** clicking "View Puzzle Stats" also shatters the button itself into a handful of jagged pieces that tumble off the bottom of the screen, with a synthesized glass-breaking crash (same Web Audio API approach as the app's existing invalid-entry ding, no audio files) — purely cosmetic, both the animation and its sound skipped automatically if the browser's reduced-motion setting is on, and the button always comes back intact the next time the Help modal opens.
 
@@ -79,7 +79,7 @@ Switching into the Special view (via **Special**) or back out of it (via **Retur
 
 ### Version display
 
-The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v5.0.0").
+The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v5.0.1").
 
 ## How to run it
 
@@ -103,6 +103,7 @@ npm test
 
 ## Version history
 
+- **v5.0.1** — Version bump to keep sudoku-web and Sudoku-App in lockstep (Sudoku-App 5.0.1 syncs it with this site's 5.0.0 features). The "View Puzzle Stats" button already opens the shared public Umami dashboard in a new tab with no API key or fetch; the README now notes the dashboard is shared with Sudoku-App.
 - **v5.0.0** — Invalid entries now play a short, soft synthesized bell "ding" (Web Audio, no audio files) instead of the old beep. It also plays for non-digit keys (letters, symbols, 0), which were previously rejected silently, and in Learn Mode for anything other than 1–4. The audio is unlocked on the first tap/keypress so it works on iPhone/iPad Safari, and rapid invalid keys are throttled so dings never pile up. Rejection rules are unchanged.
 - **v4.0.9** — The Print button now opens a small popup offering "Print with Help" (the existing printout, unchanged) or "Print without Help" (same printout minus the row/column help numbers and the small candidate numbers inside squares). Cancel, clicking the backdrop, or Escape closes it without printing. Nothing on screen or in the puzzle data changes either way.
 - **v4.0.8** — Restored the "View Puzzle Stats" button in the Help modal (same shatter effect on click as before), now opening a public Umami dashboard in a new tab instead of fetching and displaying a count inline, replacing the removed CountAPI counter.
