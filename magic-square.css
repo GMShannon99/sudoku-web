@@ -60,3 +60,20 @@
 }
 
 .ms-screen .messages { text-align: center; min-height: 1.5em; }
+
+.ms-rules-heading {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  margin: 14px 0 6px;
+}
+.ms-rules-heading:first-child { margin-top: 0; }
+.ms-rules ul + .ms-rules-heading { margin-top: 18px; }
+
+.ms-level-picker {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 18px;
+  font-size: 0.9rem;
+}
+.ms-level-picker label { cursor: pointer; }

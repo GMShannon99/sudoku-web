@@ -31,15 +31,22 @@ const MagicSquares = (function () {
   let givens = MagicLogic.emptyGrid();
   let puzzleOrigin = "rules"; // "input" (Manual Entry) or "rules" (Generate Puzzle)
   let focusAfterPopup = null;
+  let level = "easy"; // "easy" or "hard", chosen with the radios on the Rules screen
+  const LEVEL_LABELS = { easy: "Easy Level", hard: "Hard Level" };
 
   function show(screenId) {
     for (const el of document.querySelectorAll(".screen.active")) el.classList.remove("active");
     $(screenId).classList.add("active");
     $("pageTitle").textContent = TITLES[screenId];
-    $("difficultyLine").textContent = "";
+    // The level sub-heading (the page's difficulty line) shows on every
+    // screen reached from Rules.
+    $("difficultyLine").textContent = screenId === "msRulesScreen" ? "" : LEVEL_LABELS[level];
   }
 
   function goHome() {
+    level = "easy";
+    $("msLevelEasy").checked = true;
+    $("difficultyLine").textContent = "";
     for (const el of document.querySelectorAll(".screen.active")) el.classList.remove("active");
     $("entryScreen").classList.add("active");
     $("pageTitle").textContent = `Enter Your Sudoku Puzzle v${APP_VERSION}`;
@@ -64,7 +71,7 @@ const MagicSquares = (function () {
     for (let r = 0; r < N; r++) {
       for (let c = 0; c < N; c++) {
         const v = cells[`${r},${c}`].value.trim();
-        if (MagicLogic.isDigit(v)) grid[r][c] = parseInt(v, 10);
+        if (MagicLogic.isValue(v, level)) grid[r][c] = parseInt(v, 10);
       }
     }
     return grid;
@@ -88,6 +95,14 @@ const MagicSquares = (function () {
         } else {
           input.addEventListener("focus", () => input.select());
           input.addEventListener("input", () => onCellInput(r, c, input, cells, onChange));
+          if (level === "hard") {
+            // A one-digit hard entry may be the start of a two-digit number, so
+            // its duplicate check waits until the player leaves the cell.
+            input.addEventListener("blur", () => commitCell(r, c, input, cells, onChange));
+            input.addEventListener("keydown", (event) => {
+              if (event.key === "Enter") input.blur();
+            });
+          }
         }
         gridEl.appendChild(input);
         cells[`${r},${c}`] = input;
@@ -96,27 +111,53 @@ const MagicSquares = (function () {
     return cells;
   }
 
-  // Rejects anything but a digit 1-9, and any digit already used in the grid,
-  // each with its own popup.
+  // Rejects anything that isn't a valid entry for the level (a digit 1-9, or
+  // a whole number 1-99 in hard level), and any number already used in the
+  // grid, each with its own popup. In hard level a one-digit entry is not
+  // checked for duplicates yet (see commitCell), so typing "1" "2" works
+  // even when a 1 is already on the grid.
   function onCellInput(row, col, input, cells, onChange) {
+    const maxLen = level === "hard" ? 2 : 1;
     let v = input.value.trim();
-    if (v.length > 1) v = v[v.length - 1];
-    if (v && !MagicLogic.isDigit(v)) {
+    if (v.length > maxLen) v = v[v.length - 1];
+    if (v && !MagicLogic.isValue(v, level)) {
       input.value = "";
       showPopup(MSG_NOT_NUMERIC, input);
     } else if (v) {
-      const grid = readGrid(cells);
-      grid[row][col] = 0;
-      if (MagicLogic.hasDuplicate(grid, row, col, v)) {
-        input.value = "";
-        showPopup(MSG_DUPLICATE, input);
-      } else {
-        input.value = v;
-      }
+      input.value = v;
+      if (!(level === "hard" && v.length === 1)) checkDuplicate(row, col, input, cells);
     } else {
       input.value = "";
     }
     if (onChange) onChange();
+  }
+
+  // Clears the cell and shows the duplicate popup if its number is already
+  // used elsewhere. Returns true if it rejected the entry.
+  function checkDuplicate(row, col, input, cells) {
+    const grid = readGrid(cells);
+    grid[row][col] = 0;
+    if (!input.value || !MagicLogic.hasDuplicate(grid, row, col, input.value)) return false;
+    input.value = "";
+    showPopup(MSG_DUPLICATE, input);
+    return true;
+  }
+
+  // Hard level: the deferred duplicate check for a finished one-digit entry.
+  function commitCell(row, col, input, cells, onChange) {
+    if (input.value && checkDuplicate(row, col, input, cells) && onChange) onChange();
+  }
+
+  // Runs the deferred check on every editable cell; true if any was rejected.
+  function commitAll(cells) {
+    let rejected = false;
+    for (const key in cells) {
+      const input = cells[key];
+      if (input.disabled || !input.value) continue;
+      const [r, c] = key.split(",").map(Number);
+      if (checkDuplicate(r, c, input, cells)) rejected = true;
+    }
+    return rejected;
   }
 
   function setStatus(text, kind) {
@@ -127,7 +168,7 @@ const MagicSquares = (function () {
   function updateStatus() {
     const grid = readGrid(puzzleCells);
     if (!MagicLogic.isFull(grid)) return setStatus("", "");
-    if (MagicLogic.isMagic(grid)) setStatus("Solved!", "success");
+    if (MagicLogic.isMagic(grid, level)) setStatus("Solved!", "success");
     else setStatus("The grid is full, but it is not a magic square.", "error");
   }
 
@@ -140,20 +181,23 @@ const MagicSquares = (function () {
   }
 
   function openInput() {
+    level = $("msLevelHard").checked ? "hard" : "easy";
     inputCells = buildGrid($("msInputGrid"), MagicLogic.emptyGrid());
     show("msInputScreen");
   }
 
   function inputDone() {
+    if (overlayEl.classList.contains("active") || commitAll(inputCells)) return;
     const grid = readGrid(inputCells);
     if (MagicLogic.countFilled(grid) === 0) return showPopup(MSG_NEED_ONE);
-    if (!MagicLogic.canComplete(grid)) return showPopup(MSG_CANT_COMPLETE);
+    if (!MagicLogic.canComplete(grid, level)) return showPopup(MSG_CANT_COMPLETE);
     startPuzzle(grid, "input");
   }
 
   function showSolution() {
+    if (overlayEl.classList.contains("active") || commitAll(puzzleCells)) return;
     const entries = readGrid(puzzleCells);
-    const solved = MagicLogic.solution(givens, entries);
+    const solved = MagicLogic.solution(givens, entries, level);
     const cells = buildGrid($("msSolutionGrid"), givens);
     for (let r = 0; r < N; r++) {
       for (let c = 0; c < N; c++) {
@@ -170,9 +214,10 @@ const MagicSquares = (function () {
 
   $("magicSquaresBtn").addEventListener("click", () => show("msRulesScreen"));
   $("msRulesManualBtn").addEventListener("click", openInput);
-  $("msRulesGenerateBtn").addEventListener("click", () =>
-    startPuzzle(MagicLogic.generatePuzzle().puzzle, "rules")
-  );
+  $("msRulesGenerateBtn").addEventListener("click", () => {
+    level = $("msLevelHard").checked ? "hard" : "easy";
+    startPuzzle(MagicLogic.generatePuzzle(Math.random, level).puzzle, "rules");
+  });
   $("msRulesExitBtn").addEventListener("click", goHome);
 
   $("msInputDoneBtn").addEventListener("click", inputDone);
