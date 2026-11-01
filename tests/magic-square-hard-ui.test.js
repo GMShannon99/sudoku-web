@@ -58,7 +58,8 @@ test("Rules screen: both rule blocks, radios default to Easy, no sub-heading on 
   assert.equal(r.belowButtons, true);
   assert.equal(r.inRules, true);
   assert.match(r.rules, /1 to 9 is used exactly once/);
-  assert.match(r.rules, /1 to 99/);
+  assert.match(r.rules, /1 to 20/);
+  assert.doesNotMatch(r.rules, /99/);
   assert.match(r.rules, /no number can be used twice/);
   assert.match(r.rules, /the total isn't fixed/);
 });
@@ -102,7 +103,7 @@ test("Hard: sub-heading on every screen; level kept across Show Solution/Return 
     pickHard();
     click("msRulesManualBtn");
     out.input = sub();
-    keys("msInputGrid", 4, "50");
+    keys("msInputGrid", 4, "10");
     click("msInputDoneBtn");
     out.puzzle = sub();
     click("msPuzzleSolutionBtn");
@@ -133,53 +134,67 @@ test("Hard: sub-heading on every screen; level kept across Show Solution/Return 
   assert.equal(r.afterHome, true);
 });
 
-test("Hard input: two-digit numbers type smoothly; 0, 00, letters and duplicates are rejected", () => {
+test("Hard input: 10-20 type smoothly; 21+, 0, 00, letters and duplicates are rejected with the right popup", () => {
   const r = run(`
     click("magicSquaresBtn");
     pickHard();
     click("msRulesManualBtn");
     const G = "msInputGrid";
     const out = {};
-    keys(G, 0, "42");
-    out.two = [cellEl(G, 0).value, popup()];
-    keys(G, 1, "4"); // a lone 4 may be the start of 45, so no duplicate check yet
-    out.lone4 = popup();
+    const take = (label, n) => { out[label] = [popup(), cellEl(G, n).value]; if (popup()) closePopup(); };
+    keys(G, 0, "1");
+    leave(G, 0);
+    keys(G, 1, "1"); // a lone 1 may be the start of 15, so no duplicate check yet
+    out.lone1 = popup();
     keys(G, 1, "5");
-    out.fortyFive = [cellEl(G, 1).value, popup()];
-    keys(G, 2, "4");
-    keys(G, 2, "2"); // 42 is already used
-    out.dup = [popup(), cellEl(G, 2).value];
-    closePopup();
-    keys(G, 3, "7");
-    leave(G, 3);
-    keys(G, 4, "7"); // lone 7 duplicates cell 3 once the player leaves the cell
-    out.pendingSeven = popup();
-    leave(G, 4);
-    out.singleDup = [popup(), cellEl(G, 4).value];
-    closePopup();
-    for (const [label, text] of [["zero", "0"], ["zeroZero", "00"], ["letter", "x"], ["hundred", "100"], ["minus", "-"]]) {
-      keys(G, 5, text);
-      out[label] = [popup(), cellEl(G, 5).value];
-      if (popup()) closePopup();
-      cellEl(G, 5).value = "";
+    take("fifteenWhileOneExists", 1);
+    keys(G, 2, "15");
+    take("dup15", 2);
+    keys(G, 3, "20");
+    take("twenty", 3);
+    keys(G, 4, "21");
+    take("twentyOne", 4);
+    keys(G, 4, "99");
+    take("ninetyNine", 4);
+    keys(G, 4, "30");
+    take("thirty", 4);
+    keys(G, 4, "100");
+    take("hundred", 4);
+    keys(G, 5, "7");
+    take("seven", 5);
+    keys(G, 6, "7"); // first digit 3-9 can't grow, so a duplicate is caught at once, without leaving the cell
+    take("dupSeven", 6);
+    keys(G, 6, "1");
+    out.lone1Again = popup(); // pending, same as above
+    leave(G, 6);
+    take("lone1OnLeave", 6);
+    for (const [label, text] of [["zero", "0"], ["zeroZero", "00"], ["letter", "x"], ["minus", "-"]]) {
+      keys(G, 8, text);
+      take(label, 8);
+      cellEl(G, 8).value = "";
     }
-    keys(G, 5, "99");
-    out.ninetyNine = [popup(), cellEl(G, 5).value];
+    // a leading zero can only arrive by paste (typing the 0 is rejected on its own)
+    cellEl(G, 8).value = "05";
+    cellEl(G, 8).dispatchEvent(new Event("input"));
+    take("leadingZero", 8);
     window.__result = JSON.stringify(out);
   `);
   const NUM = "Only numeric values are allowed";
-  assert.deepEqual(r.two, ["42", null]);
-  assert.equal(r.lone4, null);
-  assert.deepEqual(r.fortyFive, ["45", null]);
-  assert.deepEqual(r.dup, ["No duplicate values vertically, horizontally or diagonally allowed", ""]);
-  assert.equal(r.pendingSeven, null);
-  assert.deepEqual(r.singleDup, ["No duplicate values vertically, horizontally or diagonally allowed", ""]);
-  assert.deepEqual(r.zero, [NUM, ""]);
-  assert.deepEqual(r.zeroZero, [NUM, ""]);
-  assert.deepEqual(r.letter, [NUM, ""]);
-  assert.equal(r.hundred[0], NUM); // 10 is fine, the third digit (a 0 on its own) is not
-  assert.deepEqual(r.minus, [NUM, ""]);
-  assert.deepEqual(r.ninetyNine, [null, "99"]);
+  const RANGE = "Numbers must be from 1 to 20";
+  const DUP = "No duplicate values vertically, horizontally or diagonally allowed";
+  assert.equal(r.lone1, null);
+  assert.deepEqual(r.fifteenWhileOneExists, [null, "15"]);
+  assert.deepEqual(r.dup15, [DUP, ""]);
+  assert.deepEqual(r.twenty, [null, "20"]);
+  assert.deepEqual(r.twentyOne, [RANGE, ""]);
+  assert.deepEqual(r.ninetyNine, [RANGE, ""]);
+  assert.deepEqual(r.thirty, [RANGE, ""]);
+  assert.deepEqual(r.hundred, [RANGE, ""]);
+  assert.deepEqual(r.seven, [null, "7"]);
+  assert.deepEqual(r.dupSeven, [DUP, ""]);
+  assert.equal(r.lone1Again, null);
+  assert.deepEqual(r.lone1OnLeave, [DUP, ""]);
+  for (const k of ["zero", "zeroZero", "leadingZero", "letter", "minus"]) assert.deepEqual(r[k], [NUM, ""], k);
 });
 
 test("Hard Done: needs a number, refuses impossible numbers, accepts completable ones with locked givens", () => {
@@ -192,14 +207,25 @@ test("Hard Done: needs a number, refuses impossible numbers, accepts completable
     click("msInputDoneBtn");
     out.empty = [popup(), $("msInputScreen").classList.contains("active")];
     closePopup();
-    keys(G, 4, "1"); // a centre of 1 can never be completed
+    // a centre no hard square can have, found by enumeration rather than assumed
+    let badCentre = 0;
+    for (let v = 1; v <= 20 && !badCentre; v++) {
+      const g = MagicLogic.emptyGrid();
+      g[1][1] = v;
+      if (!MagicLogic.canComplete(g, "hard")) badCentre = v;
+    }
+    out.badCentre = badCentre;
+    keys(G, 4, String(badCentre));
+    leave(G, 4);
     click("msInputDoneBtn");
     out.bad = [popup(), $("msInputScreen").classList.contains("active")];
     closePopup();
     cellEl(G, 4).value = "";
-    keys(G, 4, "50");
-    keys(G, 0, "57");
-    keys(G, 2, "70");
+    const sq = MagicLogic.hardMatching(MagicLogic.emptyGrid(), 1)[0];
+    out.sq = sq;
+    keys(G, 4, String(sq[1][1]));
+    keys(G, 0, String(sq[0][0]));
+    keys(G, 2, String(sq[0][2]));
     click("msInputDoneBtn");
     out.good = [popup(), title(), sub()];
     out.locked = Array.from($("msPuzzleGrid").children).map((i) => (i.disabled ? i.value : "-")).join(",");
@@ -207,13 +233,14 @@ test("Hard Done: needs a number, refuses impossible numbers, accepts completable
   `);
   assert.equal(r.empty[0], "Please enter at least one number");
   assert.equal(r.empty[1], true);
+  assert.ok(r.badCentre > 0, "some centre value must be impossible");
   assert.equal(r.bad[0], "These numbers can't be completed into a magic square");
   assert.equal(r.bad[1], true);
   assert.deepEqual(r.good, [null, "Magic Square Puzzle", "Hard Level"]);
-  assert.equal(r.locked, "57,-,70,-,50,-,-,-,-");
+  assert.equal(r.locked, [r.sq[0][0], "-", r.sq[0][2], "-", r.sq[1][1], "-", "-", "-", "-"].join(","));
 });
 
-test("Hard Generate: 3-ish locked givens; solving the puzzle shows Solved!; a wrong full grid says so", () => {
+test("Hard Generate: 2-3 locked givens; solving the puzzle shows Solved!; a wrong full grid says so", () => {
   const r = run(`
     click("magicSquaresBtn");
     pickHard();
@@ -239,7 +266,7 @@ test("Hard Generate: 3-ish locked givens; solving the puzzle shows Solved!; a wr
     out.solved = $("msStatusLine").textContent;
     window.__result = JSON.stringify(out);
   `);
-  assert.ok(r.givens >= 3 && r.givens <= 5, "givens: " + r.givens);
+  assert.ok(r.givens >= 2 && r.givens <= 4, "givens: " + r.givens);
   assert.deepEqual(r.buttons, ["Show Solution", "Exit"]);
   assert.equal(r.solutionMagic, true);
   assert.equal(r.wrong[0], null);
@@ -254,7 +281,10 @@ test("Hard Show Solution -> Return keeps the entries exactly", () => {
     click("msRulesGenerateBtn");
     const P = "msPuzzleGrid";
     const free = Array.from($(P).children).findIndex((i) => !i.disabled);
-    keys(P, free, "88");
+    // a number from 1-20 that is not already on the grid
+    const used = Array.from($(P).children).map((i) => i.value);
+    const mine = String([...Array(20).keys()].map((k) => k + 1).find((n) => n > 2 && !used.includes(String(n))));
+    keys(P, free, mine);
     leave(P, free);
     const before = vals(P);
     click("msPuzzleSolutionBtn");

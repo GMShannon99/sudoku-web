@@ -6,7 +6,7 @@
  * numbers (0 = empty) -- so it's testable under Node.
  *
  * Two levels: "easy" (1-9 once each, every line = 15; the 8 squares below)
- * and "hard" (nine distinct whole numbers 1-99, every line the same total
+ * and "hard" (nine distinct whole numbers 1-20, every line the same total
  * but not a fixed one). Every function that depends on the level takes it as
  * a last argument defaulting to "easy".
  *
@@ -140,9 +140,9 @@ function magicGeneratePuzzle(rng = Math.random, level = "easy") {
 //     c-a+b  c       c+a-b
 //     c-b    c+a+b   c-a
 // so every hard-level square can be enumerated as (c, a, b) with all nine
-// values distinct and inside 1..99.
+// values distinct and inside 1..20.
 // ---------------------------------------------------------------------------
-const MAGIC_HARD_MAX = 99;
+const MAGIC_HARD_MAX = 20;
 
 function magicHardCells(c, a, b) {
   return [c + a, c - a - b, c + b, c - a + b, c, c + a - b, c - b, c + a + b, c - a];
@@ -180,7 +180,7 @@ function magicHardMatching(grid, limit = Infinity) {
   return found;
 }
 
-// Full grid of nine distinct whole numbers 1-99 whose rows, columns and both
+// Full grid of nine distinct whole numbers 1-20 whose rows, columns and both
 // diagonals all share one total.
 function magicHardIsMagic(grid) {
   const flat = grid.flat();
@@ -204,7 +204,8 @@ function magicHardGeneratePuzzle(rng) {
 
   // Random valid square: draw (c, a, b) until all nine values are legal.
   let solution = null;
-  while (!solution) {
+  for (let tries = 0; !solution; tries++) {
+    if (tries >= 1000) solution = MAGIC_SQUARES[0].map((row) => row.slice()); // safety net: any easy square is a valid hard one
     const c = pick(1, MAGIC_HARD_MAX);
     const r = Math.min(c - 1, MAGIC_HARD_MAX - c);
     if (r < 1) continue;
@@ -216,16 +217,17 @@ function magicHardGeneratePuzzle(rng) {
     }
   }
 
-  // Three givens in independent positions pin down (c, a, b); a random
-  // choice of 3 usually works, otherwise try more givens. Uniqueness is
-  // always verified by enumeration (a second match stops the search early).
+  // Only 608 hard squares fit in 1-20, so as few as 2 givens can already pin
+  // one down (about 1 random pair in 12 does; 3 givens work about 93% of the
+  // time). Try random pairs, then triples, then more. Uniqueness is always
+  // verified by enumeration (a second match stops the search early).
   const build = (positions) => {
     const puzzle = magicEmptyGrid();
     for (const [r, c] of positions) puzzle[r][c] = solution[r][c];
     return puzzle;
   };
-  for (let count = 3; count <= 8; count++) {
-    for (let attempt = 0; attempt < (count === 3 ? 12 : 8); attempt++) {
+  for (let count = 2; count <= 8; count++) {
+    for (let attempt = 0; attempt < (count <= 3 ? 12 : 8); attempt++) {
       const puzzle = build(magicShuffled(cells, rng).slice(0, count));
       if (magicHardMatching(puzzle, 2).length === 1) return { puzzle, solution };
     }
@@ -237,10 +239,20 @@ function magicHardGeneratePuzzle(rng) {
 // Level-aware entry points.
 // ---------------------------------------------------------------------------
 
-// One cell's text: easy = a single digit 1-9, hard = a whole number 1-99
+// One cell's text: easy = a single digit 1-9, hard = a whole number 1-20
 // (no leading zero, so "0" and "00" are rejected).
 function magicIsValue(value, level = "easy") {
-  return level === "hard" ? /^(?:[1-9]|[1-9][0-9])$/.test(String(value)) : magicIsDigit(value);
+  return magicEntryError(value, level) === null;
+}
+
+// Why a cell's text isn't a valid entry: "nonnumeric" (not a number, or "0",
+// "00" or a leading zero) or, hard level only, "range" (a number over 20).
+// null if it is valid.
+function magicEntryError(value, level = "easy") {
+  const text = String(value);
+  if (level !== "hard") return magicIsDigit(text) ? null : "nonnumeric";
+  if (!/^[0-9]+$/.test(text) || text[0] === "0") return "nonnumeric";
+  return Number(text) > MAGIC_HARD_MAX ? "range" : null;
 }
 
 function magicCanCompleteAt(grid, level = "easy") {
@@ -264,6 +276,7 @@ const MagicLogic = {
   isFull: magicIsFull,
   isMagic: magicIsMagicAt,
   isValue: magicIsValue,
+  entryError: magicEntryError,
   HARD_MAX: MAGIC_HARD_MAX,
   hardMatching: magicHardMatching,
   solution: magicSolution,

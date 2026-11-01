@@ -11,6 +11,7 @@ const MagicSquares = (function () {
   const $ = (id) => document.getElementById(id);
 
   const MSG_NOT_NUMERIC = "Only numeric values are allowed";
+  const MSG_RANGE = "Numbers must be from 1 to 20";
   const MSG_DUPLICATE = "No duplicate values vertically, horizontally or diagonally allowed";
   const MSG_CANT_COMPLETE = "These numbers can't be completed into a magic square";
   const MSG_NEED_ONE = "Please enter at least one number";
@@ -112,20 +113,24 @@ const MagicSquares = (function () {
   }
 
   // Rejects anything that isn't a valid entry for the level (a digit 1-9, or
-  // a whole number 1-99 in hard level), and any number already used in the
-  // grid, each with its own popup. In hard level a one-digit entry is not
-  // checked for duplicates yet (see commitCell), so typing "1" "2" works
-  // even when a 1 is already on the grid.
+  // a whole number 1-20 in hard level), and any number already used in the
+  // grid, each with its own popup. In hard level a first digit of 1 or 2 is
+  // not checked for duplicates yet (see commitCell), because it can still
+  // grow into 10-20, so typing "1" "2" works even when a 1 is already on the
+  // grid. A first digit of 3-9 can't grow, so it is checked right away.
   function onCellInput(row, col, input, cells, onChange) {
     const maxLen = level === "hard" ? 2 : 1;
     let v = input.value.trim();
-    if (v.length > maxLen) v = v[v.length - 1];
-    if (v && !MagicLogic.isValue(v, level)) {
+    // Easy: typing over a filled cell keeps the newest digit. Hard: a third
+    // digit makes a number over 20, which gets the range message below.
+    if (v.length > maxLen && !(level === "hard" && /^[1-9][0-9]*$/.test(v))) v = v[v.length - 1];
+    const error = v ? MagicLogic.entryError(v, level) : null;
+    if (error) {
       input.value = "";
-      showPopup(MSG_NOT_NUMERIC, input);
+      showPopup(error === "range" ? MSG_RANGE : MSG_NOT_NUMERIC, input);
     } else if (v) {
       input.value = v;
-      if (!(level === "hard" && v.length === 1)) checkDuplicate(row, col, input, cells);
+      if (!(level === "hard" && (v === "1" || v === "2"))) checkDuplicate(row, col, input, cells);
     } else {
       input.value = "";
     }
