@@ -79,7 +79,7 @@ Switching into the Special view (via **Special**) or back out of it (via **Retur
 
 ### Version display
 
-The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v5.0.1").
+The current version number is shown right in the entry screen's page title (e.g. "Enter Your Sudoku Puzzle v5.1.0").
 
 ## How to run it
 
@@ -103,6 +103,7 @@ npm test
 
 ## Version history
 
+- **v5.1.0** — Added Magic Squares (3×3): a new "Magic Squares" button at the bottom of the home screen opens a short Rules screen with **Manual Entry**, **Generate Puzzle** and **Exit**. Manual Entry lets you type starting numbers (digits 1–9 only, no repeats anywhere in the grid, each rejected with a popup) and checks they can still be completed into one of the 8 valid magic squares; Generate Puzzle picks a random valid square and shows 3–4 givens with exactly one solution. On the puzzle screen you fill in the rest, see "Solved!" when it is right, or use **Show Solution** (and **Return** to your entries). The code lives in new files (`magic-square-logic.js`, `magic-square-ui.js`, `magic-square.css`); no existing Sudoku behavior changed.
 - **v5.0.1** — Version bump to keep sudoku-web and Sudoku-App in lockstep (Sudoku-App 5.0.1 syncs it with this site's 5.0.0 features). The "View Puzzle Stats" button already opens the shared public Umami dashboard in a new tab with no API key or fetch; the README now notes the dashboard is shared with Sudoku-App.
 - **v5.0.0** — Invalid entries now play a short, soft synthesized bell "ding" (Web Audio, no audio files) instead of the old beep. It also plays for non-digit keys (letters, symbols, 0), which were previously rejected silently, and in Learn Mode for anything other than 1–4. The audio is unlocked on the first tap/keypress so it works on iPhone/iPad Safari, and rapid invalid keys are throttled so dings never pile up. Rejection rules are unchanged.
 - **v4.0.9** — The Print button now opens a small popup offering "Print with Help" (the existing printout, unchanged) or "Print without Help" (same printout minus the row/column help numbers and the small candidate numbers inside squares). Cancel, clicking the backdrop, or Escape closes it without printing. Nothing on screen or in the puzzle data changes either way.

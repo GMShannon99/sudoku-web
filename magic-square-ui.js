@@ -1,0 +1,198 @@
+/*
+ * MAGIC SQUARES -- DOM/UI wiring. Loaded after sudoku-ui.js and
+ * magic-square-logic.js; reuses the APP_VERSION global. Four screens
+ * (.screen/.active switching, like Learn Mode): Rules, Input (manual
+ * entry), Puzzle, Solution, plus one message popup (.modal-overlay).
+ * See magic-square-logic.js for how to remove the feature.
+ */
+
+const MagicSquares = (function () {
+  const N = MagicLogic.SIZE;
+  const $ = (id) => document.getElementById(id);
+
+  const MSG_NOT_NUMERIC = "Only numeric values are allowed";
+  const MSG_DUPLICATE = "No duplicate values vertically, horizontally or diagonally allowed";
+  const MSG_CANT_COMPLETE = "These numbers can't be completed into a magic square";
+  const MSG_NEED_ONE = "Please enter at least one number";
+
+  const TITLES = {
+    msRulesScreen: "Magic Square Rules",
+    msInputScreen: "Create a Magic Puzzle Input",
+    msPuzzleScreen: "Magic Square Puzzle",
+    msSolutionScreen: "Magic Square Solution",
+  };
+
+  const overlayEl = $("msMessageOverlay");
+  const messageEl = $("msMessageText");
+  const statusEl = $("msStatusLine");
+
+  let inputCells = null; // "r,c" -> <input> on the input screen
+  let puzzleCells = null; // same, on the puzzle screen
+  let givens = MagicLogic.emptyGrid();
+  let puzzleOrigin = "rules"; // "input" (Manual Entry) or "rules" (Generate Puzzle)
+  let focusAfterPopup = null;
+
+  function show(screenId) {
+    for (const el of document.querySelectorAll(".screen.active")) el.classList.remove("active");
+    $(screenId).classList.add("active");
+    $("pageTitle").textContent = TITLES[screenId];
+    $("difficultyLine").textContent = "";
+  }
+
+  function goHome() {
+    for (const el of document.querySelectorAll(".screen.active")) el.classList.remove("active");
+    $("entryScreen").classList.add("active");
+    $("pageTitle").textContent = `Enter Your Sudoku Puzzle v${APP_VERSION}`;
+  }
+
+  function showPopup(message, returnFocusTo) {
+    messageEl.textContent = message;
+    focusAfterPopup = returnFocusTo || null;
+    overlayEl.classList.add("active");
+    $("msMessageCloseBtn").focus();
+  }
+
+  function hidePopup() {
+    if (!overlayEl.classList.contains("active")) return;
+    overlayEl.classList.remove("active");
+    if (focusAfterPopup) focusAfterPopup.focus();
+    focusAfterPopup = null;
+  }
+
+  function readGrid(cells) {
+    const grid = MagicLogic.emptyGrid();
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const v = cells[`${r},${c}`].value.trim();
+        if (MagicLogic.isDigit(v)) grid[r][c] = parseInt(v, 10);
+      }
+    }
+    return grid;
+  }
+
+  // Builds a 3x3 grid into gridEl. `locked` is a 3x3 array of givens (0 = editable).
+  function buildGrid(gridEl, locked, onChange) {
+    gridEl.innerHTML = "";
+    const cells = {};
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const input = document.createElement("input");
+        input.className = "cell";
+        input.inputMode = "numeric";
+        input.autocomplete = "off";
+        input.setAttribute("aria-label", `Row ${r + 1}, column ${c + 1}`);
+        if (locked[r][c] !== 0) {
+          input.value = locked[r][c];
+          input.classList.add("given");
+          input.disabled = true;
+        } else {
+          input.addEventListener("focus", () => input.select());
+          input.addEventListener("input", () => onCellInput(r, c, input, cells, onChange));
+        }
+        gridEl.appendChild(input);
+        cells[`${r},${c}`] = input;
+      }
+    }
+    return cells;
+  }
+
+  // Rejects anything but a digit 1-9, and any digit already used in the grid,
+  // each with its own popup.
+  function onCellInput(row, col, input, cells, onChange) {
+    let v = input.value.trim();
+    if (v.length > 1) v = v[v.length - 1];
+    if (v && !MagicLogic.isDigit(v)) {
+      input.value = "";
+      showPopup(MSG_NOT_NUMERIC, input);
+    } else if (v) {
+      const grid = readGrid(cells);
+      grid[row][col] = 0;
+      if (MagicLogic.hasDuplicate(grid, row, col, v)) {
+        input.value = "";
+        showPopup(MSG_DUPLICATE, input);
+      } else {
+        input.value = v;
+      }
+    } else {
+      input.value = "";
+    }
+    if (onChange) onChange();
+  }
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text;
+    statusEl.className = "status-line" + (kind ? " " + kind : "");
+  }
+
+  function updateStatus() {
+    const grid = readGrid(puzzleCells);
+    if (!MagicLogic.isFull(grid)) return setStatus("", "");
+    if (MagicLogic.isMagic(grid)) setStatus("Solved!", "success");
+    else setStatus("The grid is full, but it is not a magic square.", "error");
+  }
+
+  function startPuzzle(givenGrid, origin) {
+    givens = givenGrid.map((row) => row.slice());
+    puzzleOrigin = origin;
+    puzzleCells = buildGrid($("msPuzzleGrid"), givens, updateStatus);
+    setStatus("", "");
+    show("msPuzzleScreen");
+  }
+
+  function openInput() {
+    inputCells = buildGrid($("msInputGrid"), MagicLogic.emptyGrid());
+    show("msInputScreen");
+  }
+
+  function inputDone() {
+    const grid = readGrid(inputCells);
+    if (MagicLogic.countFilled(grid) === 0) return showPopup(MSG_NEED_ONE);
+    if (!MagicLogic.canComplete(grid)) return showPopup(MSG_CANT_COMPLETE);
+    startPuzzle(grid, "input");
+  }
+
+  function showSolution() {
+    const entries = readGrid(puzzleCells);
+    const solved = MagicLogic.solution(givens, entries);
+    const cells = buildGrid($("msSolutionGrid"), givens);
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const input = cells[`${r},${c}`];
+        if (givens[r][c] === 0) {
+          input.value = solved[r][c];
+          input.disabled = true;
+          input.style.color = "var(--solved-guess)";
+        }
+      }
+    }
+    show("msSolutionScreen");
+  }
+
+  $("magicSquaresBtn").addEventListener("click", () => show("msRulesScreen"));
+  $("msRulesManualBtn").addEventListener("click", openInput);
+  $("msRulesGenerateBtn").addEventListener("click", () =>
+    startPuzzle(MagicLogic.generatePuzzle().puzzle, "rules")
+  );
+  $("msRulesExitBtn").addEventListener("click", goHome);
+
+  $("msInputDoneBtn").addEventListener("click", inputDone);
+  $("msInputExitBtn").addEventListener("click", () => show("msRulesScreen"));
+
+  $("msPuzzleSolutionBtn").addEventListener("click", showSolution);
+  $("msPuzzleExitBtn").addEventListener("click", () =>
+    show(puzzleOrigin === "input" ? "msInputScreen" : "msRulesScreen")
+  );
+  $("msSolutionReturnBtn").addEventListener("click", () => show("msPuzzleScreen"));
+
+  $("msMessageCloseBtn").addEventListener("click", hidePopup);
+  overlayEl.addEventListener("click", (event) => {
+    if (event.target === overlayEl) hidePopup();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") hidePopup();
+  });
+
+  return { show, goHome };
+})();
+
+window.MagicSquares = MagicSquares;

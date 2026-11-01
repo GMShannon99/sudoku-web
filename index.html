@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sudoku Solver</title>
 <link rel="stylesheet" href="learn-mode.css">
+<link rel="stylesheet" href="magic-square.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -853,6 +854,7 @@
             <span class="learn-track"></span>
             <span>Learn Mode</span>
           </label>
+          <button class="secondary" id="magicSquaresBtn">Magic Squares</button>
         </div>
       </div>
     </div>
@@ -915,6 +917,56 @@
     </div>
     <div class="messages">
       <div class="status-line" id="learnStatusLine"></div>
+    </div>
+  </div>
+
+  <!-- ===================== MAGIC SQUARES ===================== -->
+  <!-- Rules, input, puzzle and solution screens (see magic-square-ui.js). -->
+  <div class="screen ms-screen" id="msRulesScreen">
+    <div class="ms-rules">
+      <p>Fill the 3&times;3 grid so that:</p>
+      <ul>
+        <li>Each number from 1 to 9 is used exactly once.</li>
+        <li>Every row, every column and both long diagonals add up to the same total, 15.</li>
+      </ul>
+    </div>
+    <div class="controls">
+      <button class="secondary" id="msRulesManualBtn">Manual Entry</button>
+      <button class="secondary" id="msRulesGenerateBtn">Generate Puzzle</button>
+      <button id="msRulesExitBtn">Exit</button>
+    </div>
+  </div>
+
+  <div class="screen ms-screen" id="msInputScreen">
+    <div class="ms-board-frame"><div class="ms-grid" id="msInputGrid"></div></div>
+    <div class="controls">
+      <button id="msInputDoneBtn">Done</button>
+      <button class="secondary" id="msInputExitBtn">Exit</button>
+    </div>
+  </div>
+
+  <div class="screen ms-screen" id="msPuzzleScreen">
+    <div class="ms-board-frame"><div class="ms-grid" id="msPuzzleGrid"></div></div>
+    <div class="controls">
+      <button id="msPuzzleSolutionBtn">Show Solution</button>
+      <button class="secondary" id="msPuzzleExitBtn">Exit</button>
+    </div>
+    <div class="messages"><div class="status-line" id="msStatusLine"></div></div>
+  </div>
+
+  <div class="screen ms-screen" id="msSolutionScreen">
+    <div class="ms-board-frame"><div class="ms-grid" id="msSolutionGrid"></div></div>
+    <div class="controls">
+      <button id="msSolutionReturnBtn">Return</button>
+    </div>
+  </div>
+
+  <!-- Same modal-overlay/modal pattern as #printInvalidOverlay. -->
+  <div class="modal-overlay" id="msMessageOverlay">
+    <div class="modal" role="dialog" aria-labelledby="msMessageTitle">
+      <h2 id="msMessageTitle">Magic Squares</h2>
+      <div class="modal-body"><p id="msMessageText"></p></div>
+      <div class="modal-footer"><button id="msMessageCloseBtn">Close</button></div>
     </div>
   </div>
 
@@ -1189,5 +1241,7 @@
 <script src="sudoku-ui.js"></script>
 <script src="learn-mode-logic.js"></script>
 <script src="learn-mode-ui.js"></script>
+<script src="magic-square-logic.js"></script>
+<script src="magic-square-ui.js"></script>
 </body>
 </html>
