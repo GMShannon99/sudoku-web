@@ -50,7 +50,7 @@ test("home button is last in the panel (below Help) and opens the Rules screen",
   assert.equal(r.last, true);
   assert.equal(r.afterHelp, true);
   assert.equal(r.label, "Magic Squares");
-  assert.equal(r.before, "Enter Your Sudoku Puzzle v5.1.1");
+  assert.equal(r.before, "Enter Your Sudoku Puzzle v5.1.2");
   assert.deepEqual(r.active, ["msRulesScreen"]);
   assert.equal(r.title, "Magic Square Rules");
   assert.deepEqual(r.buttons, ["Manual Entry", "Generate Puzzle", "Exit"]);
@@ -65,7 +65,7 @@ test("Rules Exit returns to the home screen and restores the normal title", () =
     window.__result = JSON.stringify({ active: active(), title: title() });
   `);
   assert.deepEqual(r.active, ["entryScreen"]);
-  assert.equal(r.title, "Enter Your Sudoku Puzzle v5.1.1");
+  assert.equal(r.title, "Enter Your Sudoku Puzzle v5.1.2");
 });
 
 test("Manual Entry screen: title, buttons, non-digit and duplicate popups, Escape closes", () => {
@@ -146,7 +146,7 @@ test("Input Exit goes to Rules; a Manual Entry puzzle's Exit returns to the inpu
   assert.deepEqual(r.b, [["msInputScreen"], "Create a Magic Puzzle Input", "5"]);
 });
 
-test("Generate Puzzle: straight to the puzzle, 3-4 locked givens, Exit returns to Rules", () => {
+test("Generate Puzzle: straight to the puzzle, 3+ locked givens, Exit returns to Rules", () => {
   const r = run(`
     click("magicSquaresBtn");
     click("msRulesGenerateBtn");
@@ -157,7 +157,7 @@ test("Generate Puzzle: straight to the puzzle, 3-4 locked givens, Exit returns t
   `);
   assert.deepEqual(r.active, ["msPuzzleScreen"]);
   assert.equal(r.title, "Magic Square Puzzle");
-  assert.ok(r.givens === 3 || r.givens === 4);
+  assert.ok(r.givens >= 3 && r.givens <= 5);
   assert.deepEqual(r.buttons, ["Show Solution", "Exit"]);
   assert.deepEqual(r.exit, [["msRulesScreen"], "Magic Square Rules"]);
 });
@@ -220,12 +220,12 @@ test("Show Solution -> Return keeps the entries exactly; the solution screen has
   assert.deepEqual(r.back, [["msPuzzleScreen"], "Magic Square Puzzle", true]);
 });
 
-test("responsive tiers are present and versions are all 5.1.1", () => {
+test("responsive tiers are present and versions are all 5.1.2", () => {
   const css = read("magic-square.css");
   for (const w of [520, 500, 400]) assert.match(css, new RegExp(`max-width: ${w}px`));
-  assert.match(read("sudoku-ui.js"), /APP_VERSION = "5.1.1"/);
-  assert.equal(JSON.parse(read("package.json")).version, "5.1.1");
+  assert.match(read("sudoku-ui.js"), /APP_VERSION = "5.1.2"/);
+  assert.equal(JSON.parse(read("package.json")).version, "5.1.2");
   const lock = JSON.parse(read("package-lock.json"));
-  assert.equal(lock.version, "5.1.1");
-  assert.equal(lock.packages[""].version, "5.1.1");
+  assert.equal(lock.version, "5.1.2");
+  assert.equal(lock.packages[""].version, "5.1.2");
 });

@@ -32,21 +32,35 @@ const MagicSquares = (function () {
   let givens = MagicLogic.emptyGrid();
   let puzzleOrigin = "rules"; // "input" (Manual Entry) or "rules" (Generate Puzzle)
   let focusAfterPopup = null;
-  let level = "easy"; // "easy" or "hard", chosen with the radios on the Rules screen
-  const LEVEL_LABELS = { easy: "Easy Level", hard: "Hard Level" };
+  // Two independent choices made with the radio groups on the Rules screen:
+  // level (the number range: 1 = digits 1-9, 2 = numbers 1-20) and difficulty
+  // ("easy" or "hard": how many givens a generated puzzle shows).
+  let level = 1;
+  let difficulty = "easy";
+  const DIFFICULTY_LABELS = { easy: "Easy Level", hard: "Hard Level" };
 
   function show(screenId) {
     for (const el of document.querySelectorAll(".screen.active")) el.classList.remove("active");
     $(screenId).classList.add("active");
     $("pageTitle").textContent = TITLES[screenId];
-    // The level sub-heading (the page's difficulty line) shows on every
-    // screen reached from Rules.
-    $("difficultyLine").textContent = screenId === "msRulesScreen" ? "" : LEVEL_LABELS[level];
+    $("difficultyLine").textContent = subHeading(screenId);
+  }
+
+  // The sub-heading under the page title (the page's difficulty line): the
+  // level on every screen reached from Rules, plus the difficulty on the
+  // screens of a generated puzzle.
+  function subHeading(screenId) {
+    if (screenId === "msRulesScreen") return "";
+    const text = `Level ${level}`;
+    const generated = screenId !== "msInputScreen" && puzzleOrigin === "rules";
+    return generated ? `${text} - ${DIFFICULTY_LABELS[difficulty]}` : text;
   }
 
   function goHome() {
-    level = "easy";
-    $("msLevelEasy").checked = true;
+    level = 1;
+    difficulty = "easy";
+    $("msLevel1").checked = true;
+    $("msDifficultyEasy").checked = true;
     $("difficultyLine").textContent = "";
     for (const el of document.querySelectorAll(".screen.active")) el.classList.remove("active");
     $("entryScreen").classList.add("active");
@@ -96,8 +110,8 @@ const MagicSquares = (function () {
         } else {
           input.addEventListener("focus", () => input.select());
           input.addEventListener("input", () => onCellInput(r, c, input, cells, onChange));
-          if (level === "hard") {
-            // A one-digit hard entry may be the start of a two-digit number, so
+          if (level === 2) {
+            // A one-digit level-2 entry may be the start of a two-digit number, so
             // its duplicate check waits until the player leaves the cell.
             input.addEventListener("blur", () => commitCell(r, c, input, cells, onChange));
             input.addEventListener("keydown", (event) => {
@@ -113,24 +127,24 @@ const MagicSquares = (function () {
   }
 
   // Rejects anything that isn't a valid entry for the level (a digit 1-9, or
-  // a whole number 1-20 in hard level), and any number already used in the
-  // grid, each with its own popup. In hard level a first digit of 1 or 2 is
+  // a whole number 1-20 in level 2), and any number already used in the
+  // grid, each with its own popup. In level 2 a first digit of 1 or 2 is
   // not checked for duplicates yet (see commitCell), because it can still
   // grow into 10-20, so typing "1" "2" works even when a 1 is already on the
   // grid. A first digit of 3-9 can't grow, so it is checked right away.
   function onCellInput(row, col, input, cells, onChange) {
-    const maxLen = level === "hard" ? 2 : 1;
+    const maxLen = level === 2 ? 2 : 1;
     let v = input.value.trim();
-    // Easy: typing over a filled cell keeps the newest digit. Hard: a third
+    // Level 1: typing over a filled cell keeps the newest digit. Level 2: a third
     // digit makes a number over 20, which gets the range message below.
-    if (v.length > maxLen && !(level === "hard" && /^[1-9][0-9]*$/.test(v))) v = v[v.length - 1];
+    if (v.length > maxLen && !(level === 2 && /^[1-9][0-9]*$/.test(v))) v = v[v.length - 1];
     const error = v ? MagicLogic.entryError(v, level) : null;
     if (error) {
       input.value = "";
       showPopup(error === "range" ? MSG_RANGE : MSG_NOT_NUMERIC, input);
     } else if (v) {
       input.value = v;
-      if (!(level === "hard" && (v === "1" || v === "2"))) checkDuplicate(row, col, input, cells);
+      if (!(level === 2 && (v === "1" || v === "2"))) checkDuplicate(row, col, input, cells);
     } else {
       input.value = "";
     }
@@ -148,7 +162,7 @@ const MagicSquares = (function () {
     return true;
   }
 
-  // Hard level: the deferred duplicate check for a finished one-digit entry.
+  // Level 2: the deferred duplicate check for a finished one-digit entry.
   function commitCell(row, col, input, cells, onChange) {
     if (input.value && checkDuplicate(row, col, input, cells) && onChange) onChange();
   }
@@ -185,8 +199,13 @@ const MagicSquares = (function () {
     show("msPuzzleScreen");
   }
 
+  // Manual Entry ignores the difficulty; only the number range applies.
+  function readLevel() {
+    level = $("msLevel2").checked ? 2 : 1;
+  }
+
   function openInput() {
-    level = $("msLevelHard").checked ? "hard" : "easy";
+    readLevel();
     inputCells = buildGrid($("msInputGrid"), MagicLogic.emptyGrid());
     show("msInputScreen");
   }
@@ -220,8 +239,9 @@ const MagicSquares = (function () {
   $("magicSquaresBtn").addEventListener("click", () => show("msRulesScreen"));
   $("msRulesManualBtn").addEventListener("click", openInput);
   $("msRulesGenerateBtn").addEventListener("click", () => {
-    level = $("msLevelHard").checked ? "hard" : "easy";
-    startPuzzle(MagicLogic.generatePuzzle(Math.random, level).puzzle, "rules");
+    readLevel();
+    difficulty = $("msDifficultyHard").checked ? "hard" : "easy";
+    startPuzzle(MagicLogic.generatePuzzle(Math.random, level, difficulty).puzzle, "rules");
   });
   $("msRulesExitBtn").addEventListener("click", goHome);
 

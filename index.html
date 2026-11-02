@@ -924,16 +924,16 @@
   <!-- Rules, input, puzzle and solution screens (see magic-square-ui.js). -->
   <div class="screen ms-screen" id="msRulesScreen">
     <div class="ms-rules">
-      <h3 class="ms-rules-heading">Easy Level</h3>
+      <h3 class="ms-rules-heading">Level 1</h3>
       <p>Fill the 3&times;3 grid so that:</p>
       <ul>
         <li>Each number from 1 to 9 is used exactly once.</li>
         <li>Every row, every column and both long diagonals add up to the same total, 15.</li>
       </ul>
-      <h3 class="ms-rules-heading">Hard Level</h3>
+      <h3 class="ms-rules-heading">Level 2</h3>
       <ul>
         <li>Each square holds one number from 1 to 20, and no number can be used twice.</li>
-        <li>Every row, column and both diagonals must add up to the same total. Unlike Easy Level, the total isn't fixed, so you work it out.</li>
+        <li>Every row, column and both diagonals must add up to the same total. Unlike Level 1, the total isn't fixed, so you work it out.</li>
       </ul>
     </div>
     <div class="controls">
@@ -941,9 +941,13 @@
       <button class="secondary" id="msRulesGenerateBtn">Generate Puzzle</button>
       <button id="msRulesExitBtn">Exit</button>
     </div>
-    <div class="ms-level-picker">
-      <label><input type="radio" name="msLevel" id="msLevelEasy" value="easy" checked> Easy Level</label>
-      <label><input type="radio" name="msLevel" id="msLevelHard" value="hard"> Hard Level</label>
+    <div class="ms-level-picker" role="radiogroup" aria-label="Difficulty">
+      <label><input type="radio" name="msDifficulty" id="msDifficultyEasy" value="easy" checked> Easy Level</label>
+      <label><input type="radio" name="msDifficulty" id="msDifficultyHard" value="hard"> Hard Level</label>
+    </div>
+    <div class="ms-level-picker" role="radiogroup" aria-label="Number range">
+      <label><input type="radio" name="msLevel" id="msLevel1" value="1" checked> Level 1</label>
+      <label><input type="radio" name="msLevel" id="msLevel2" value="2"> Level 2</label>
     </div>
   </div>
 

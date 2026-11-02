@@ -77,3 +77,4 @@
   font-size: 0.9rem;
 }
 .ms-level-picker label { cursor: pointer; }
+.ms-level-picker + .ms-level-picker { margin-top: 10px; }

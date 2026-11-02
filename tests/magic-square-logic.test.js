@@ -83,12 +83,12 @@ test("isMagic / isFull", () => {
   assert.equal(M.isMagic(M.emptyGrid()), false);
 });
 
-test("generatePuzzle: 3-4 givens, givens match the solution, exactly one completion", () => {
+test("generatePuzzle (easy): at least 3 givens, givens match the solution, exactly one completion", () => {
   const seen = new Set();
   for (let i = 0; i < 300; i++) {
     const { puzzle, solution } = M.generatePuzzle();
     const n = M.countFilled(puzzle);
-    assert.ok(n === 3 || n === 4, `got ${n} givens`);
+    assert.ok(n >= 3 && n <= 5, `got ${n} givens`); // easy difficulty: at least 3
     assert.equal(M.matching(puzzle).length, 1);
     assert.deepEqual(M.matching(puzzle)[0], solution);
     puzzle.forEach((row, r) => row.forEach((v, c) => v && assert.equal(v, solution[r][c])));
